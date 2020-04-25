@@ -1,0 +1,40 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: Arial,Helvetica,simsun,sans-serif;
+    font-size: 14px;
+}
+body table {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-top: 1px solid silver;
+    border-right: 1px solid silver;
+    border-bottom: 1px solid silver;
+    border-collapse: collapse;
+    float: left;
+}
+table th, table td {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-right: 1px solid silver;
+    width: 100px;
+    height: 20px;
+    line-height: 0;
+}
+table th {
+    border-bottom: 1px solid silver;
+    text-align: center;
+    background-color: gold;
+}
+.l {
+    text-align: left;
+}
+.c {
+    text-align: center;
+}
+.r {
+    text-align: right;
+}
