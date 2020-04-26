@@ -1,5 +1,6 @@
 /**
  * <p>依据蓝材料（固源岩除外）【最低耗体】的所有图的输入，获得每个关卡的综合价值输出。</p>
+ * <p>结果除以 100 实际上就是该关卡性价比，大于 1 为盈，小于 1 为亏。</p>
  * @author Lyric
  * @since 2020-04-25
  */
@@ -345,7 +346,7 @@
         };
         // 用于记录某个材料的最大价值关卡
         var maxRecord = {}; // 格式："item30013": {"maxStageId": "main_04-06", "maxScore": 0.0}
-        // 关卡价值表，一个关卡的价值等于：SUM(该关卡所有掉落物的价值 * 该材料在该关卡的掉落率 * 100) / 该关卡体力消耗，忽略龙门币
+        // 关卡价值表，一个关卡的价值等于：SUM(该关卡所有掉落物的价值 * 该材料在该关卡的掉落率) / 该关卡体力消耗，忽略龙门币
         for (var k00 = 0; k00 < _zones.length; k00 ++) {
             // 章节
             var zone = _zones[k00];
@@ -365,14 +366,14 @@
                     // 掉落
                     var mtrx = _matrix.matrix[k02];
                     if (stageId === mtrx.stageId) {
-                        var result = 100 * mtrx.quantity * getItemValue(mtrx.itemId) / mtrx.times;
+                        var result = mtrx.quantity * getItemValue(mtrx.itemId) / mtrx.times;
                         if (result) { // 因为有家具和活动代币之类的东西造成 NaN
                             total += result;
                         }
                     }
                 }
                 // 关卡价值
-                var score = (total / stageApCost).toFixed(0);
+                var score = (total / stageApCost).toFixed(2);
                 // 主材料名
                 var mainDropItemName = "", mainDropItemId = "";
                 if (stageObj.normalDrop[0]) {
@@ -407,7 +408,7 @@
                 var rDiff = rightR - leftR;
                 var gDiff = rightG - leftG;
                 var bDiff = rightB - leftB;
-                var lScore = 10, rScore = 200; // 10 分最小，200 分最大，超出按边界计算
+                var lScore = 0.1, rScore = 2; // 0.1 分最小，2 分最大，超出按边界计算
                 var percent = (score - lScore) / (rScore - lScore);
                 if (!percent) {
                     red = leftR;
