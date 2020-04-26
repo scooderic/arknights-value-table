@@ -1,9 +1,21 @@
 /**
+ * <p>依据蓝材料（固源岩除外）【最低耗体】的所有图的输入，获得每个关卡的综合价值输出。</p>
+ * @author Lyric
  * @since 2020-04-25
  */
 (function ($) {
     "use strict";
     $(function ($_$) {
+        // 龙门币因子，每 100 龙门币的价值
+        var lmd100Value = 0.00333333;
+        // 中级作战记录价值因子
+        var expCard2Value = Math.log10(30 * 1000 / 7400 / 3);
+        // 高级作战记录价值
+        var expCard3Value = 2 * expCard2Value;
+        // 初级作战记录价值
+        var expCard1Value = 0.4 * expCard2Value;
+        // 基础作战记录价值
+        var expCard0Value = 0.2 * expCard2Value;
         // 蓝材料们才参与基础运算，其余的材料价值基于蓝材料
         var valuableItems = [
             "30013", // 固源岩组
@@ -52,7 +64,7 @@
             "31014", // 聚合凝胶
             "31024" // 炽合金块
         ];
-        // 蓝材料最低耗体关卡列表
+        // 蓝材料最低耗体关卡列表【修改此部分输入，即可影像全局所有结果，无需更改代码】
         var stageList1 = [
             {
                 "itemId": "31023", // 炽合金
@@ -75,9 +87,9 @@
                 "code": "3-1"
             },
             {
-                "itemId": "30013", // 固源岩组
-                "stageId": "main_02-04",
-                "code": "2-4"
+                "itemId": "30012", // 固源岩（固源岩合成固源岩组）
+                "stageId": "main_01-07",
+                "code": "1-7"
             },
             {
                 "itemId": "30083", // 轻锰矿
@@ -96,8 +108,8 @@
             },
             {
                 "itemId": "30043", // 异铁组
-                "stageId": "sub_04-1-1",
-                "code": "S4-1"
+                "stageId": "main_02-08",
+                "code": "2-8"
             },
             {
                 "itemId": "30063", // 全新装置
@@ -132,9 +144,15 @@
                         // 查到关卡理智消耗
                         var apCost = stageObj.apCost;
                         var obj = {};
-                        obj.itemId = itemId;
-                        obj.name = itemName;
-                        obj.value = Math.log10(apCost * mat.times / mat.quantity);
+                        if (stageId === "main_01-07" && itemId === "30012") { // 固源岩组特殊处理，因为它是按 1-7 刷固源岩来算的
+                            obj.itemId = "30013";
+                            obj.name = "固源岩组";
+                            obj.value = Math.log10((apCost * mat.times / mat.quantity) * 5 + (2 * lmd100Value));
+                        } else {
+                            obj.itemId = itemId;
+                            obj.name = itemName;
+                            obj.value = Math.log10(apCost * mat.times / mat.quantity);
+                        }
                         obj.by = stageId;
                         obj.byCode = stageCode;
                         ret.push(obj);
@@ -145,8 +163,6 @@
         };
         // 蓝材料价值
         var blueItemValueTable0 = blueItemValueTable();
-        // 龙门币因子，每 100 龙门币的价值
-        var lmd100Value = 0.00333333;
         // 绿材料价值，等于：(蓝材料价值 - 200 龙门币价值) / 4，固源岩是除以 5
         var greenItemValueTable = function () {
             var ret = [];
@@ -285,14 +301,6 @@
         };
         // 紫材料价值
         var purpleItemValueTable0 = purpleItemValueTable();
-        // 中级作战记录价值因子
-        var expCard2Value = Math.log10(30 * 1000 / 7400 / 3);
-        // 高级作战记录价值
-        var expCard3Value = 2 * expCard2Value;
-        // 初级作战记录价值
-        var expCard1Value = 0.4 * expCard2Value;
-        // 基础作战记录价值
-        var expCard0Value = 0.2 * expCard2Value;
         // 作战记录价值表
         var expCardValueTable = function () {
             var ret = [];
@@ -335,10 +343,13 @@
                 }
             }
         };
+        // 用于记录某个材料的最大价值关卡
+        var maxRecord = {}; // 格式："item30013": {"maxStageId": "main_04-06", "maxScore": 0.0}
         // 关卡价值表，一个关卡的价值等于：SUM(该关卡所有掉落物的价值 * 该材料在该关卡的掉落率 * 100) / 该关卡体力消耗，忽略龙门币
         for (var k00 = 0; k00 < _zones.length; k00 ++) {
             // 章节
             var zone = _zones[k00];
+            !($("body").append("<table id='" + zone.zoneId + "'><th colspan='3'>" + zone.zoneName + "</th></table>"));
             // 关卡列表
             var stages1 = zone.stages;
             for (var k01 = 0; k01 < stages1.length; k01 ++) {
@@ -361,38 +372,77 @@
                     }
                 }
                 // 关卡价值
-                var score = total / stageApCost;
-                console.log(stageObj.code + ": " + score);
+                var score = (total / stageApCost).toFixed(2);
+                // 主材料名
+                var mainDropItemName = "", mainDropItemId = "";
+                if (stageObj.normalDrop[0]) {
+                    var itemObj = db.selectItem(stageObj.normalDrop[0]);
+                    if (valuableItems.includes(itemObj.itemId)) {
+                        mainDropItemName = itemObj.name;
+                        mainDropItemId = itemObj.itemId;
+                        // 记录最大关卡，只记主线
+                        if ((stageObj.stageType === "MAIN" || stageObj.stageType === "SUB") && stageObj.zoneId != null && stageObj.zoneId.substring(0, 4) === "main") {
+                            var itemKey = "item" + itemObj.itemId;
+                            var newObj = {
+                                maxStageId: stageId,
+                                maxScore: score
+                            };
+                            if (maxRecord.hasOwnProperty(itemKey)) {
+                                var currentMaxStageId = maxRecord[itemKey].stageId;
+                                var currentMaxScore = maxRecord[itemKey].maxScore;
+                                if (score > parseFloat(currentMaxScore)) {
+                                    maxRecord[itemKey] = newObj;
+                                }
+                            } else {
+                                maxRecord[itemKey] = newObj;
+                            }
+                        }
+                    }
+                }
+                // 颜色渐变
+                var red = 0, green = 0, blue = 0;
+                // var leftR = 255, leftG = 107, leftB = 104; // 红色
+                var leftR = 255, leftG = 255, leftB = 255; // 白色
+                var rightR = 99, rightG = 190, rightB = 69; // 绿色
+                var rDiff = rightR - leftR;
+                var gDiff = rightG - leftG;
+                var bDiff = rightB - leftB;
+                var lScore = 1, rScore = 7; // 1 分最小，7 分最大，超出按边界计算
+                var percent = (score - lScore) / (rScore - lScore);
+                if (!percent) {
+                    red = leftR;
+                    green = leftG;
+                    blue = leftB;
+                } else {
+                    if (percent <= 0) {
+                        red = leftR;
+                        green = leftG;
+                        blue = leftB;
+                    } else if (percent >= 1) {
+                        red = rightR;
+                        green = rightG;
+                        blue = rightB;
+                    } else {
+                        red = parseInt(rDiff * percent + leftR);
+                        green = parseInt(gDiff * percent + leftG);
+                        blue = parseInt(bDiff * percent + leftB);
+                    }
+                }
+                var colorStr = "rgb(" + red + "," + green + "," + blue + ")";
+                !($("#" + zone.zoneId).append("<tr class='output-tr' style='background-color:" + colorStr + ";'><td class='c'>" + stageObj.code + "</td><td class='c'>" + mainDropItemName + "</td><td class='r score-output' data-stageid='" + stageId + "' data-itemid='" + mainDropItemId + "' data-score='" + score + "'>" + score + "</td></tr>"));
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        !($("body").append("<p id='p1'><span>p</span></p>"));
-        !($("#p1").append("<span>span</span>"));
+        // 找出得分最高的关卡
+        for (var n00 = 0; n00 < valuableItems.length; n00 ++) {
+            var itemId0 = valuableItems[n00];
+            var itemKey0 = "item" + itemId0;
+            var max = maxRecord[itemKey0];
+            $(".score-output").each(function () {
+                var that = $(this);
+                if (that.data("stageid") === max.maxStageId) { // && that.data("itemid") == itemId0
+                    that.parent("tr").removeClass("max").addClass("max");
+                }
+            });
+        }
     });
 })(window.jQuery);

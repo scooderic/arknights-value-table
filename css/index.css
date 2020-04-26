@@ -6,12 +6,9 @@ html, body {
     font-size: 14px;
 }
 body table {
-    margin: 0;
+    margin: 1px;
     padding: 0;
-    border: 0;
-    border-top: 1px solid silver;
-    border-right: 1px solid silver;
-    border-bottom: 1px solid silver;
+    border: 1px solid silver;
     border-collapse: collapse;
     float: left;
 }
@@ -20,9 +17,9 @@ table th, table td {
     padding: 0;
     border: 0;
     border-right: 1px solid silver;
-    width: 100px;
-    height: 20px;
-    line-height: 0;
+    width: 70px;
+    height: 18px;
+    line-height: 14px;
 }
 table th {
     border-bottom: 1px solid silver;
@@ -37,4 +34,8 @@ table th {
 }
 .r {
     text-align: right;
+}
+.max {
+    font-weight: bold;
+    color: red;
 }
