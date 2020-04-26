@@ -7,9 +7,9 @@
     "use strict";
     $(function ($_$) {
         // 龙门币因子，每 100 龙门币的价值
-        var lmd100Value = 0.00333333;
+        var lmd100Value = 30 * 100 / 7500 / 3; // 三分之一 CE-5 倍率
         // 中级作战记录价值因子
-        var expCard2Value = Math.log10(30 * 1000 / 7400 / 3);
+        var expCard2Value = 30 * 1000 / 7400 / 3; // 三分之一 LS-5 倍率
         // 高级作战记录价值
         var expCard3Value = 2 * expCard2Value;
         // 初级作战记录价值
@@ -127,7 +127,7 @@
                 "code": "2-6"
             }
         ];
-        // （蓝）材料价值，一个材料的价值等于：该材料所属“最优”关卡的掉落率的倒数乘以理智消耗的以 10 为底的对数，即 LOG10(理智消耗 * 样本数 / 掉落数)
+        // （蓝）材料价值，一个材料的价值等于：该材料所属“最优”关卡的掉落率的倒数乘以理智消耗，即理智消耗 * 样本数 / 掉落数
         var blueItemValueTable = function () {
             var ret = [];
             for (var i00 = 0; i00 < stageList1.length; i00 ++) {
@@ -147,11 +147,11 @@
                         if (stageId === "main_01-07" && itemId === "30012") { // 固源岩组特殊处理，因为它是按 1-7 刷固源岩来算的
                             obj.itemId = "30013";
                             obj.name = "固源岩组";
-                            obj.value = Math.log10((apCost * mat.times / mat.quantity) * 5 + (2 * lmd100Value));
+                            obj.value = (apCost * mat.times / mat.quantity) * 5 + (2 * lmd100Value);
                         } else {
                             obj.itemId = itemId;
                             obj.name = itemName;
-                            obj.value = Math.log10(apCost * mat.times / mat.quantity);
+                            obj.value = apCost * mat.times / mat.quantity;
                         }
                         obj.by = stageId;
                         obj.byCode = stageCode;
@@ -372,7 +372,7 @@
                     }
                 }
                 // 关卡价值
-                var score = (total / stageApCost).toFixed(2);
+                var score = (total / stageApCost).toFixed(0);
                 // 主材料名
                 var mainDropItemName = "", mainDropItemId = "";
                 if (stageObj.normalDrop[0]) {
@@ -407,7 +407,7 @@
                 var rDiff = rightR - leftR;
                 var gDiff = rightG - leftG;
                 var bDiff = rightB - leftB;
-                var lScore = 1, rScore = 7; // 1 分最小，7 分最大，超出按边界计算
+                var lScore = 10, rScore = 200; // 10 分最小，200 分最大，超出按边界计算
                 var percent = (score - lScore) / (rScore - lScore);
                 if (!percent) {
                     red = leftR;
