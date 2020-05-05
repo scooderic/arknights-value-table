@@ -38,5 +38,15 @@ var db = {
                 }
             }
         }
+    },
+    selectParametricModelPrice: function (_itemId) {
+        if (_parametricModelPrices) {
+            for (var _i = 0; _i < _parametricModelPrices.length; _i ++) {
+                var _priceObj = _parametricModelPrices[_i];
+                if (_itemId === _priceObj.itemId) {
+                    return _priceObj;
+                }
+            }
+        }
     }
 };
