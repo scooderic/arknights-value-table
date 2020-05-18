@@ -3,6 +3,7 @@
  * <p>结果除以 100 实际上就是该关卡性价比，大于 1 为盈，小于 1 为亏。</p>
  * @author Lyric
  * @since 2020-04-25
+ * @version 2020-05-18
  */
 (function ($) {
     "use strict";
@@ -104,8 +105,8 @@
             },
             {
                 "itemId": "30103", // RMA70-12
-                "stageId": "main_02-10",
-                "code": "2-10"
+                "stageId": "main_07-08",
+                "code": "7-10"
             },
             {
                 "itemId": "30043", // 异铁组
@@ -376,8 +377,18 @@
                 var score = (total / stageApCost).toFixed(2);
                 // 主材料名
                 var mainDropItemName = "", mainDropItemId = "";
-                if (stageObj.normalDrop[0]) {
-                    var itemObj = db.selectItem(stageObj.normalDrop[0]);
+                var stageDropInfos = stageObj.dropInfos;
+                var stageDropBlueItemIdArr = [];
+                if (stageDropInfos != null) {
+                    for (var o00 = 0; o00 < stageDropInfos.length; o00 ++) {
+                        var stageDropInfo = stageDropInfos[o00];
+                        if (stageDropInfo.dropType === "NORMAL_DROP" && stageDropInfo.itemId != null && stageDropInfo.itemId.length === 5 && parseInt(stageDropInfo.itemId) % 10 === 3) {
+                            stageDropBlueItemIdArr.push(stageDropInfo.itemId);
+                        }
+                    }
+                }
+                if (stageDropBlueItemIdArr.length === 1) { // 注：意思是，蓝材料常规掉落仅 1（到目前第七章为止，只有这种关卡）
+                    var itemObj = db.selectItem(stageDropBlueItemIdArr[0]);
                     if (valuableItems.includes(itemObj.itemId)) {
                         mainDropItemName = itemObj.name;
                         mainDropItemId = itemObj.itemId;
@@ -446,4 +457,4 @@
             });
         }
     });
-})(window.jQuery);
+})(jQuery);
