@@ -366,7 +366,7 @@
                 for (var k02 = 0; k02 < _matrix.matrix.length; k02 ++) {
                     // 掉落
                     var mtrx = _matrix.matrix[k02];
-                    if (stageId === mtrx.stageId) {
+                    if (stageId === mtrx.stageId && mtrx.times > 499) { // 样本数过 500 才算
                         var result = mtrx.quantity * getItemValue(mtrx.itemId) / mtrx.times;
                         if (result) { // 因为有家具和活动代币之类的东西造成 NaN
                             total += result;
